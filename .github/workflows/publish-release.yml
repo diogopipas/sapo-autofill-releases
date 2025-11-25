@@ -1,0 +1,48 @@
+name: Publish Release Artifacts
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  build-and-sync:
+    runs-on: macos-latest   # or ubuntu if cross-building
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install deps
+        run: |
+          npm ci
+          # whatever else your build needs
+
+      - name: Build DMG
+        run: |
+          npm run build:dmg   # replace with your script
+        env:
+          NODE_ENV: production
+
+      - name: Prepare artifact folder
+        run: |
+          mkdir -p release
+          cp dist/SAPO-Emprego-Autofill-${{ github.event.release.tag_name }}.dmg release/
+          cp docs/WHATS-NEW.md release/CHANGELOG.md
+
+      - name: Push to public releases repo
+        env:
+          RELEASES_REPO_TOKEN: ${{ secrets.RELEASES_REPO_TOKEN }}
+          RELEASES_REPO: ${{ secrets.RELEASES_REPO }}
+        run: |
+          cd release
+          git init
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git remote add origin https://${RELEASES_REPO_TOKEN}@github.com/${RELEASES_REPO}.git
+          git checkout -b release-${{ github.event.release.tag_name }}
+          git add .
+          git commit -m "Release ${{ github.event.release.tag_name }}"
+          git tag ${{ github.event.release.tag_name }}
+          git push origin release-${{ github.event.release.tag_name }} --force
+          git push origin ${{ github.event.release.tag_name }} --force
