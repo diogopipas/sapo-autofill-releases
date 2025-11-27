@@ -1,0 +1,40 @@
+name: Mirror Private Release
+
+on:
+  repository_dispatch:
+    types: [private-release]   # <- choose “Repository dispatch” trigger in the UI
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout (optional if you don’t modify files)
+        uses: actions/checkout@v4
+
+      - name: Download assets from private repo
+        env:
+          PRIVATE_TOKEN: ${{ secrets.PRIVATE_REPO_TOKEN }}  # PAT with repo scope to access private repo
+        run: |
+          mkdir artifacts
+          echo '${{ toJson(github.event.client_payload.assets) }}' | jq -c '.[]' | while read asset; do
+            NAME=$(echo "$asset" | jq -r '.name')
+            URL=$(echo "$asset" | jq -r '.url')
+            curl -sSL -H "Accept: application/octet-stream" \
+                       -H "Authorization: Bearer ${PRIVATE_TOKEN}" \
+                       "$URL" -o "artifacts/$NAME"
+          done
+
+      - name: Publish release in public repo
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # default token is enough here
+        run: |
+          TAG='${{ github.event.client_payload.tag }}'
+          TITLE='${{ github.event.client_payload.release_name }}'
+          NOTES='${{ github.event.client_payload.notes }}'
+
+          gh release delete "$TAG" --yes || true
+          gh release create "$TAG" artifacts/* \
+            --title "$TITLE" \
+            --notes "$NOTES" \
+            --latest
