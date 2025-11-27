@@ -4,6 +4,9 @@ on:
   repository_dispatch:
     types: [private-release]   # <- choose “Repository dispatch” trigger in the UI
 
+permissions:
+  contents: write   # allows gh release create/delete to succeed
+
 jobs:
   publish:
     runs-on: ubuntu-latest
