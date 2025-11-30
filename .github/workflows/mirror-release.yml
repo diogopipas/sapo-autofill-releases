@@ -17,7 +17,7 @@ jobs:
 
       - name: Download assets from private repo
         env:
-          PRIVATE_TOKEN: ${{ secrets.PRIVATE_TOKEN }}
+          PRIVATE_TOKEN: ${{ secrets.PRIVATE_REPO_TOKEN }}
         run: |
           set -euo pipefail
 
@@ -42,7 +42,7 @@ jobs:
 
       - name: Publish release in public repo
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.PUBLIC_RELEASES_TOKEN }}
         run: |
           set -euo pipefail
 
