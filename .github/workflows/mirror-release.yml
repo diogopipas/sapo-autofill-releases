@@ -21,11 +21,12 @@ jobs:
         run: |
           mkdir dist
           echo '${{ toJson(github.event.client_payload.assets) }}' | jq -c '.[]' | while read asset; do
-            NAME=$(echo "$asset" | jq -r '.name')
-            URL=$(echo "$asset" | jq -r '.url')
-            curl -sSL -H "Accept: application/octet-stream" \
-                       -H "Authorization: Bearer ${PRIVATE_TOKEN}" \
-                       "$URL" -o "dist/$NAME"
+          NAME=$(echo "$asset" | jq -r '.name')
+          URL=$(echo "$asset" | jq -r '.api_url')   # use .download_url if you want the public link
+          curl -sSL \
+               -H "Accept: application/octet-stream" \
+               -H "Authorization: Bearer ${PRIVATE_TOKEN}" \
+               "$URL" -o "dist/$NAME"
           done
 
       - name: Publish release in public repo
