@@ -30,14 +30,28 @@ jobs:
 
       - name: Publish release in public repo
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # default token is enough here
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          TAG='${{ github.event.client_payload.tag }}'
-          TITLE='${{ github.event.client_payload.release_name }}'
-          NOTES='${{ github.event.client_payload.notes }}'
-
+          # Extract version from artifact filename or use date-based version
+          VERSION=$(date +"%Y.%m.%d")
+          TAG="v$VERSION"
+          TITLE="SAPO Emprego Autofill v$VERSION"
+          NOTES=''
+          
+          # Delete existing release if it exists (ignore errors)
           gh release delete "$TAG" --yes || true
-          gh release create "$TAG" artifacts/* \
-            --title "$TITLE" \
-            --notes "$NOTES" \
-            --latest
+          
+          # Check if artifacts exist
+          if [ -d "artifacts" ] && [ "$(ls -A artifacts 2>/dev/null)" ]; then
+            # Create release with artifacts
+            gh release create "$TAG" artifacts/* \
+              --title "$TITLE" \
+              --notes "$NOTES" \
+              --latest
+          else
+            # Create release without artifacts
+            gh release create "$TAG" \
+              --title "$TITLE" \
+              --notes "$NOTES" \
+              --latest
+          fi
