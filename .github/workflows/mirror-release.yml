@@ -25,7 +25,7 @@ jobs:
 
           echo '${{ toJson(github.event.client_payload.assets) }}' | jq -c '.[]' | while read asset; do
             NAME=$(echo "$asset" | jq -r '.name')
-            URL=$(echo "$asset" | jq -r '.browser_download_url')
+            URL=$(echo "$asset" | jq -r '.download_url')
             EXPECTED_SIZE=$(echo "$asset" | jq -r '.size')
 
             curl --fail --location \
