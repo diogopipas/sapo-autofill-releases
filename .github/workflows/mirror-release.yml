@@ -25,8 +25,13 @@ jobs:
 
           echo '${{ toJson(github.event.client_payload.assets) }}' | jq -c '.[]' | while read asset; do
             NAME=$(echo "$asset" | jq -r '.name')
-            URL=$(echo "$asset" | jq -r '.download_url')
+            URL=$(echo "$asset" | jq -r '.api_url')
             EXPECTED_SIZE=$(echo "$asset" | jq -r '.size')
+
+            if [ -z "$URL" ] || [ "$URL" = "null" ]; then
+              echo "❌ Asset API URL is missing for $NAME"
+              exit 1
+            fi
 
             curl --fail --location \
                  -H "Accept: application/octet-stream" \
