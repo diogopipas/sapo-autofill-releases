@@ -48,15 +48,15 @@ jobs:
       - name: Publish release in public repo
         env:
           GH_TOKEN: ${{ secrets.PUBLIC_RELEASES_TOKEN }}
+          RELEASE_NOTES: ${{ github.event.client_payload.notes }}
         run: |
           set -euo pipefail
-
           VERSION="${{ github.event.client_payload.tag }}"
           VERSION="${VERSION#v}"
           TAG="v$VERSION"
           TITLE="${{ github.event.client_payload.release_name }}"
           
-          echo '${{ toJson(github.event.client_payload.notes) }}' | jq -r '.' > release-notes.md
+          printenv RELEASE_NOTES > release-notes.md
           
           gh release delete "$TAG" --cleanup-tag --yes >/dev/null 2>&1 || true
           gh release create "$TAG" dist/* \
